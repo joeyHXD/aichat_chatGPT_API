@@ -14,6 +14,7 @@ Hoshino插件，可以用chatGPT的API对话
 
 第四步：
 在`__bot__.py` 里添加文件夹名，然后重启bot
+没有反并发的去这装`https://github.com/lhhxxxxx/hoshino_tool`
 
 用法：
 1.艾特bot + 聊天

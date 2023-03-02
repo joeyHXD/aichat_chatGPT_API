@@ -23,3 +23,9 @@ Hoshino插件，可以用chatGPT的API对话
 3.一分钟内没发消息bot会自动关闭会话
 
 4."结束会话"能提前结束会话
+
+图：
+
+![W}K{JYGH$R`8BHVQAUOJ_07](https://user-images.githubusercontent.com/68325229/222481635-e40e75f1-1e7b-4ddb-b194-7c3318e00601.png)
+
+![image](https://user-images.githubusercontent.com/68325229/222481738-4f6307c8-71a7-481d-853d-e92bd5f06e3a.png)

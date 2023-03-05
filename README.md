@@ -38,9 +38,11 @@
 
 然后重启 HoshinoBot，并在想要使用的QQ群里输入指令 `启用 群AI&chatGPT`和`调整AI概率 10`
 
-如果没问题的话应该就是能用了，如果有什么想要调整的内容就去setting.py里看看
+如果没问题的话应该就是能用了，如果想调整chatGPT的模型设定可以去AIChat的__init__里改，比如说更换模型，或者增加回复的字数上限
 
 有什么不清楚的地方可以发送`帮助群AI&chatGPT`
+
+建议经常清空一次群对话，防止token使用速度越来越快
 
 临时会话的示范图：![image](https://user-images.githubusercontent.com/68325229/222948188-5dab4051-d422-495a-a2f2-ba9ef2eb8c9b.png)
 

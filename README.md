@@ -31,7 +31,7 @@
 
 去 `https://platform.openai.com/account/api-keys` 获取API key
 
-在`chat.py`的`openai.api_key`填写API key
+在`setting.py`的`api_key`填写API key
 
 在 `HoshinoBot\hoshino\config\__bot__.py` 文件的 `MODULES_ON` 加入 `aichat_chatGPT_API`，反并发不需要改`__bot__.py`
 

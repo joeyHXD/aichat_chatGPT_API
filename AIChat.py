@@ -46,13 +46,16 @@ class AIChat:
     
     def get_reply(self, msg: str):
         self.add_conversation_msg("user", msg)
-        response = self.get_full_response()
-        reply = response["choices"][0]["message"]["content"]
-        self.add_conversation_msg("assistant", msg)
-        token_cost = response["usage"]["total_tokens"]
-        self.last_token_cost = token_cost
-        self.full_token_cost += token_cost
-        return reply
+        try:
+            response = self.get_full_response()
+            reply = response["choices"][0]["message"]["content"]
+            self.add_conversation_msg("assistant", msg)
+            token_cost = response["usage"]["total_tokens"]
+            self.last_token_cost = token_cost
+            self.full_token_cost += token_cost
+            return reply
+        except openai.error.OpenAIError as e:
+            return e._message
 
     def add_conversation_setting(self, msg: str):
         self.add_conversation_msg("system", msg)

@@ -49,6 +49,8 @@ help_text = """全部指令：
 #get your bot's nickname from __bot__.py
 NICKNAME_list = []
 if type(NICKNAME) == str:
+    if NICKNAME == "":
+        NICKNAME = "星乃"
     NICKNAME_list.append(NICKNAME)
 else:
     NICKNAME_list = list(NICKNAME)
@@ -194,7 +196,6 @@ async def ai_chat(bot, ev):
     #roll触发概率
         return
     if group_id not in conversation_list:
-        await bot.send(ev, "本群没开启群聊天功能,请先使用指令”调整AI概率+零到五十之间任意数字“初始化群聊天功能")
         return
     chat = conversation_list[group_id]
     reply = chat.get_reply(msg)

@@ -40,7 +40,7 @@ class AIChat:
     def transform_group_context(self):
         context = ""
         while len(self.group_context) > 0:
-            username, msg = self.group_context.pop()
+            username, msg = self.group_context.popleft()
             string = f"{username}: {msg}\n"
             context += string
         context += f"用{self.bot_name}的口吻写一个答复来继续这段对话，不用复述"

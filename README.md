@@ -26,6 +26,8 @@
 
 安装依赖`pip install sqlitedict`
 
+安装依赖`pip install collection`
+
 在`hoshino/modules/`的目录中克隆本插件`git clone https://github.com/joeyHXD/aichat_chatGPT_API.git`
 
 在`hoshino`的目录中加入[反并发`tool.py`](https://github.com/lhhxxxxx/hoshino_tool),注意是在hoshino目录下面，不是modules,如果反并发报错说明你的星乃该更新了

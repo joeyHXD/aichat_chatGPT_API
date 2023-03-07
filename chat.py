@@ -361,7 +361,7 @@ async def start_temp_chat(bot, ev):
         if temp_chats[conversation_id] == False:
             break
         else:
-            temp_chats[qq] = False
+            temp_chats[conversation_id] = False
             await sleep(sleep_time)
     if conversation_id in temp_chats:
         del temp_chats[conversation_id]

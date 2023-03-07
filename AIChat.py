@@ -1,8 +1,8 @@
-
+﻿
 from typing import List, Dict
 from numbers import Number
 import openai
-
+from collections import deque
 class AIChat:
     def __init__(
                 self,
@@ -10,24 +10,61 @@ class AIChat:
                 conversation_id: str = "",
                 qq: str = "",
                 group_id: str = "",
-                model: str = "gpt-3.5-turbo", # "gpt-3.5-turbo" or "gpt-3.5-turbo-0301"
+                bot_name = "",
+                model: str = "gpt-3.5-turbo-0301", # "gpt-3.5-turbo" or "gpt-3.5-turbo-0301"
                 temperature: Number = 1, # between 0 and 2
-                max_tokens: int = 100, # not recommend but max = 4096
+                max_tokens: int = 1000, # not recommend but max = 4096
                 presence_penalty: Number = 0, # between -2.0 and 2.0
-                frequency_penalty: Number = 0 # between -2.0 and 2.0
+                frequency_penalty: Number = 0, # between -2.0 and 2.0
+                group_context_max: int = 3
     ):
-        self.messages = messages
+        self.messages = [{"role": "system", "content": "你的名字是“{bot_name}”，以后我说“{bot_name}”指的就是你"}]
         self.conversation_id = conversation_id
         self.qq = qq
         self.group_id = group_id
         self.model = model
+        self.bot_name = bot_name
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.presence_penalty = presence_penalty
         self.frequency_penalty = frequency_penalty
+        self.group_context_max = group_context_max
 
+        self.group_context = deque([], group_context_max)
         self.full_token_cost = 0
         self.last_token_cost = 0
+
+    def add_group_context(self, msg):
+        self.group_context.append(msg)
+
+    def transform_group_context(self):
+        context = ""
+        while len(self.group_context) > 0:
+            username, msg = self.group_context.pop()
+            string = f"{username}: {msg}\n"
+            context += string
+        context += f"用{self.bot_name}的口吻写一个答复来继续这段对话，不用复述"
+        print(context)
+        return context
+
+    def get_group_reply(self, msg: str):
+        if self.group_context_max == -1:
+            return self.get_reply(msg)
+        self.add_conversation_msg("user", self.transform_group_context())
+        try:
+            response = self.get_full_response()
+            reply = response["choices"][0]["message"]["content"].strip()
+            if reply[0] == "“":
+                reply = reply[1:]
+            if reply[-1] == "”":
+                reply = reply[:-1]
+            self.add_conversation_msg("assistant", msg)
+            token_cost = response["usage"]["total_tokens"]
+            self.last_token_cost = token_cost
+            self.full_token_cost += token_cost
+            return reply
+        except openai.error.OpenAIError as e:
+            return e._message
 
     def add_conversation_msg(self, role: str, content: str):
         message = {"role": role, "content": content}
@@ -48,7 +85,7 @@ class AIChat:
         self.add_conversation_msg("user", msg)
         try:
             response = self.get_full_response()
-            reply = response["choices"][0]["message"]["content"]
+            reply = response["choices"][0]["message"]["content"].strip()
             self.add_conversation_msg("assistant", msg)
             token_cost = response["usage"]["total_tokens"]
             self.last_token_cost = token_cost
@@ -94,6 +131,7 @@ class AIChat:
             "max_tokens": self.max_tokens,
             "presence_penalty": self.presence_penalty,
             "frequency_penalty": self.frequency_penalty,
+            "group_context_max": self.group_context_max,
             "full_token_cost": self.full_token_cost,
             "last_token_cost": self.last_token_cost
         }
@@ -109,5 +147,7 @@ class AIChat:
         self.max_tokens = conversation["max_tokens"]
         self.presence_penalty = conversation["presence_penalty"]
         self.frequency_penalty = conversation["frequency_penalty"]
+        self.group_context_max = conversation["group_context_max"]
+        self.group_context = deque([], self.group_context_max)
         self.full_token_cost = conversation["full_token_cost"]
         self.last_token_cost = conversation["last_token_cost"]

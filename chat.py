@@ -26,6 +26,11 @@ BLACK_WORD = settings["BLACK_WORD"]
 BANNED_WORD = settings["BANNED_WORD"]
 eqa_db_dir = settings["eqa_db_dir"]
 openai.api_key = settings["api_key"]
+openai.proxy = settings["proxy"]
+group_context_max = settings["group_context_max"]
+ai_chat_max_token = settings["ai_chat_max_token"]
+temp_chat_max_token = settings["temp_chat_max_token"]
+model_used = settings["model_used"] # 无效参数
 
 group_conversation_path = os.path.join(os.path.dirname(__file__), group_conversation_file_name)
 temp_chat_path = os.path.join(os.path.dirname(__file__), temp_chat_file_name)
@@ -55,7 +60,6 @@ if type(NICKNAME) == str:
 else:
     NICKNAME_list = list(NICKNAME)
 Keywords.extend(NICKNAME_list)
-
 ai_chance = Config(CONFIG_PATH)
 
 sv = Service(
@@ -74,7 +78,7 @@ with open(group_conversation_path) as file:
     group_conversations = json.load(file)
 
 for conversation_id, conversation in group_conversations.items():
-    chat = AIChat()
+    chat = AIChat(bot_name=NICKNAME_list[0])
     chat.load_dict(conversation)
     conversation_list[conversation_id] = chat
 
@@ -139,7 +143,12 @@ async def enable_aichat(bot, ev):
     ai_chance.set_chance(str(ev.group_id), chance)
     group_id = str(ev.group_id)
     if group_id not in conversation_list:
-        chat = AIChat()
+        chat = AIChat(
+            bot_name = NICKNAME_list[0],
+            group_id = group_id,
+            max_tokens = ai_chat_max_token,
+            group_context_max = group_context_max
+        )
         conversation_list[group_id] = chat
         chat_dict = chat.to_dict()
         save_chat(group_id, chat_dict)
@@ -182,7 +191,19 @@ async def ai_chat(bot, ev):
         return
     # 接下来进行群对话
     if group_id not in ai_chance.chance:
+    #未启动
         return
+    if group_id not in conversation_list:
+    #未启动或者被闭嘴了
+        return
+    if group_context_max != -1:
+    #记录群友昵称和群聊
+        chat = conversation_list[group_id]
+        info = await bot.get_group_member_info(
+                    group_id=int(ev.group_id), user_id=int(qq)
+                )
+        username = info.get("card", "") or info.get("nickname", "")
+        chat.add_group_context((username, msg))
     text = str(ev['message'])
     contains_keyword = False
     if f'[CQ:at,qq={ev["self_id"]}]' in text:
@@ -195,10 +216,11 @@ async def ai_chat(bot, ev):
     if not contains_keyword and not random.randint(1,100) <= int(ai_chance.chance[str(ev.group_id)]):
     #roll触发概率
         return
-    if group_id not in conversation_list:
-        return
-    chat = conversation_list[group_id]
-    reply = chat.get_reply(msg)
+    reply = ""
+    if group_context_max == -1:
+        reply = chat.get_reply(msg)
+    else:
+        reply = chat.get_group_reply(msg)
     await bot.send(ev, reply)
     sv.logger.info(
         f"问题：{msg} ---- 回答：{reply}"
@@ -286,9 +308,13 @@ async def continue_temp_chat(bot, ev):
     conversation_id = "_".join([qq, group_id])
     if conversation_id not in conversation_list:
         chat = AIChat(
+                    bot_name = NICKNAME_list[0],
                     conversation_id = conversation_id,
                     qq = qq,
-                    group_id = group_id
+                    group_id = group_id,
+                    max_tokens = temp_chat_max_token,
+                    group_context_max = group_context_max
+
         )
         with open(temp_chat_path) as file:
             temp_chat_record = json.load(file)
@@ -320,9 +346,12 @@ async def start_temp_chat(bot, ev):
     if conversation_id in temp_chats:
         await bot.send(ev, "不能重复创建临时会话，请先使用指令“结束临时会话”.")
     chat = AIChat(
+                bot_name = NICKNAME_list[0],
                 conversation_id = conversation_id,
                 qq = qq,
-                group_id = group_id
+                group_id = group_id,
+                max_tokens = temp_chat_max_token,
+                group_context_max = group_context_max
     )
     conversation_list[conversation_id] = chat
     temp_chats[conversation_id] = False

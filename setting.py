@@ -7,6 +7,11 @@ settings = {
     "temp_chat_file_name": "temp_chat.json",#文件名
     "api_key": "",#openai 的 API key, https://platform.openai.com/account/api-keys
     "prefix": "/t", #触发群AI的前缀
+    "group_context_max": 3, # 设置为-1则不会记录群聊，额外记录触发群AI前的3条消息，让群AI更加合群，重启丢失，不会保存这3条消息
+    "ai_chat_max_token": 100, #单条群AI回复内容的最大token数，大约50汉字的感觉
+    "temp_chat_max_token": 500, #单条临时会话回复内容的最大token数，注意单次请求必须小于4096token，这包括回复内容和所有的聊天信息，如果超出可能openAPI会报错，我不确定
+    "proxy": None, # 代理
+    "model_used": "", # 无效参数，暂时默认gpt-3.5-turbo，以后有空再补上
     "sleep_time": 60, #默认60秒，临时会话自动结束
     "DEFAULT_AI_CHANCE": 0, #群AI的默认概率
     "Keywords": ['bot','BOT','Bot','机器人','人工智障'], #你家bot说话的关键词，也可以把bot名字写这

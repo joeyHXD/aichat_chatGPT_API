@@ -203,7 +203,6 @@ async def ai_chat(bot, ev):
     text = str(ev['message'])
     qq_numbers = regex.findall(text)
     qq_numbers.append(qq)
-    print(qq_numbers)
     if group_id not in qq_to_username:
         qq_to_username[group_id] = {}
     for qq_number in qq_numbers:
@@ -214,7 +213,6 @@ async def ai_chat(bot, ev):
                     )
             username = info.get("card", "") or info.get("nickname", "")
             qq_to_username[group_id][qq_number] = username
-    print(qq_to_username)
     if group_context_max != 0:
     # 输入群消息，即使不回复也会先输入，帮助以后的回复
         username = qq_to_username[group_id][qq]

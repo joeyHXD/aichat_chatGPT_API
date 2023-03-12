@@ -26,15 +26,15 @@
 
 安装依赖`pip install sqlitedict`
 
-安装依赖`pip install collection`
+安装依赖`pip install collections`
 
 在`hoshino/modules/`的目录中克隆本插件`git clone https://github.com/joeyHXD/aichat_chatGPT_API.git`
 
 在`hoshino`的目录中加入[反并发`tool.py`](https://github.com/lhhxxxxx/hoshino_tool),注意是在hoshino目录下面，不是modules,如果反并发报错说明你的星乃该更新了
 
-去 `https://platform.openai.com/account/api-keys` 获取API key
+去 [openai官网]`https://platform.openai.com/account/api-keys` 获取API key
 
-在`setting.py`的`api_key`填写API key
+在`setting.py`的`api_key`填写API key,以及修改一些设定
 
 在 `HoshinoBot\hoshino\config\__bot__.py` 文件的 `MODULES_ON` 加入 `aichat_chatGPT_API`，反并发不需要改`__bot__.py`
 

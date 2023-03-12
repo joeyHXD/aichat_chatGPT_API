@@ -2,6 +2,7 @@
 from typing import List, Dict
 from numbers import Number
 import openai
+import re
 from collections import deque
 class AIChat:
     def __init__(
@@ -18,7 +19,23 @@ class AIChat:
                 frequency_penalty: Number = 0, # between -2.0 and 2.0
                 group_context_max: int = 3
     ):
-        self.messages = [{"role": "system", "content": "你的名字是“{bot_name}”，以后我说“{bot_name}”指的就是你"}]
+        if qq:
+        # 如果是临时会话则不添加预设定
+            self.messages = []
+        else:
+        # 如果要加其他设定可以通过 <添加群设定> 添加
+            self.messages = [
+                    {"role": "system", "content":  
+                    f"""你的名字是“{bot_name}”，你应该假装自己是一个人类，我会提供一些聊天记录，就好像这样：
+                    摸余：早
+                    袋鼠：早什么早,听好，早上要说我爱你
+                    摸余：啊这
+                    这里“摸余”和“袋鼠”都是群昵称。你要当作自己就在群里，并且恰当地加入会话。
+                    如果不知道说什么，可以:
+                    1. 根据当前讨论的话题，提供相关的信息或见解。
+                    2. 提供幽默和娱乐性
+                    绝对不可以单纯复述别人的话"""},
+                    {"role": "system", "content":  "绝对不可以复述别人的话, 也绝对不可以@别人"}]
         self.conversation_id = conversation_id
         self.qq = qq
         self.group_id = group_id
@@ -29,51 +46,49 @@ class AIChat:
         self.presence_penalty = presence_penalty
         self.frequency_penalty = frequency_penalty
         self.group_context_max = group_context_max
-
-        self.group_context = deque([], group_context_max)
+        if group_context_max == -1:
+            self.group_context = deque([])
+        else:
+            self.group_context = deque([], group_context_max + 1)
         self.full_token_cost = 0
         self.last_token_cost = 0
 
-    def add_group_context(self, msg):
-        self.group_context.append(msg)
-
-    def transform_group_context(self):
-        context = ""
-        while len(self.group_context) > 0:
-            username, msg = self.group_context.popleft()
-            string = f"{username}: {msg}\n"
-            context += string
-        context += f"用{self.bot_name}的口吻写一个答复来继续这段对话，不用复述"
-        print(context)
-        return context
+    def add_group_context(self, role, msg):
+        message = {"role": role, "content": msg}
+        self.group_context.append(message)
 
     def get_group_reply(self, msg: str):
-        if self.group_context_max == -1:
+    # for group_AI use, message will be added to self.group_context
+        if self.group_context_max == 0:
             return self.get_reply(msg)
-        self.add_conversation_msg("user", self.transform_group_context())
         try:
-            response = self.get_full_response()
+            print(len(self.messages))
+            print(f"group_context: {len(self.group_context)}")
+            response = self.get_full_response(self.messages + list(self.group_context))
             reply = response["choices"][0]["message"]["content"].strip()
-            if reply[0] == "“":
-                reply = reply[1:]
-            if reply[-1] == "”":
-                reply = reply[:-1]
-            self.add_conversation_msg("assistant", msg)
+            # reply = re.sub(r'@(\S+)', '', reply)
+            self.add_group_context("assistant", reply)
             token_cost = response["usage"]["total_tokens"]
             self.last_token_cost = token_cost
             self.full_token_cost += token_cost
             return reply
         except openai.error.OpenAIError as e:
-            return e._message
+            print(e.http_status)
+            print(e.http_body['type'])
+            try:
+                return f"error {e.http_status}: {e.http_body['type']}"
+            except:
+                return str(e.http_body)
 
     def add_conversation_msg(self, role: str, content: str):
         message = {"role": role, "content": content}
         self.messages.append(message)
 
-    def get_full_response(self):
+    def get_full_response(self, messages):
+        print(messages)
         response = openai.ChatCompletion.create(
             model=self.model,
-            messages=self.messages,
+            messages=messages,
             temperature=self.temperature,# Defaults to 1. between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
             max_tokens=self.max_tokens, # default 4096 or inf. maximum number of tokens allowed for the generated answer. 
             presence_penalty=self.presence_penalty, #default 0. between -2.0 and 2.0, increasing the model's likelihood to talk about new topics
@@ -82,11 +97,12 @@ class AIChat:
         return response
     
     def get_reply(self, msg: str):
+    # for temp_chat use, message will be added to self.messages
         self.add_conversation_msg("user", msg)
         try:
-            response = self.get_full_response()
+            response = self.get_full_response(self.messages)
             reply = response["choices"][0]["message"]["content"].strip()
-            self.add_conversation_msg("assistant", msg)
+            self.add_conversation_msg("assistant", reply)
             token_cost = response["usage"]["total_tokens"]
             self.last_token_cost = token_cost
             self.full_token_cost += token_cost
@@ -98,12 +114,14 @@ class AIChat:
         self.add_conversation_msg("system", msg)
 
     def clear_all(self):
-        self.messages = []
+        self.messages.clear()
+        self.group_context.clear()
         self.full_token_cost = 0
         self.last_token_cost = 0
 
     def clear_messages(self):
         new_messages = []
+        self.group_context.clear()
         self.full_token_cost = 0
         self.last_token_cost = 0
         for message in self.messages:
@@ -131,6 +149,7 @@ class AIChat:
             "max_tokens": self.max_tokens,
             "presence_penalty": self.presence_penalty,
             "frequency_penalty": self.frequency_penalty,
+            "group_context": list(self.group_context),
             "group_context_max": self.group_context_max,
             "full_token_cost": self.full_token_cost,
             "last_token_cost": self.last_token_cost
@@ -148,6 +167,6 @@ class AIChat:
         self.presence_penalty = conversation["presence_penalty"]
         self.frequency_penalty = conversation["frequency_penalty"]
         self.group_context_max = conversation["group_context_max"]
-        self.group_context = deque([], self.group_context_max)
+        self.group_context.extend(conversation["group_context"])
         self.full_token_cost = conversation["full_token_cost"]
         self.last_token_cost = conversation["last_token_cost"]

@@ -1,10 +1,12 @@
 import random
 import json
 import os
+import re
 
 from typing import List
 from loguru import logger
-from asyncio import sleep
+from asyncio import sleep, get_event_loop
+from concurrent.futures import ThreadPoolExecutor
 from sqlitedict import SqliteDict
 import openai
 
@@ -62,6 +64,8 @@ else:
 Keywords.extend(NICKNAME_list)
 ai_chance = Config(CONFIG_PATH)
 
+executor = ThreadPoolExecutor()
+
 sv = Service(
     name="群AI&chatGPT",  # 功能名
     visible=True,  # 可见性
@@ -73,6 +77,8 @@ sv = Service(
 
 conversation_list = {} #TODO: change variable name to conversation_dict
 temp_chats = {}
+qq_to_username = {}
+regex = re.compile(r'\[CQ:at,qq=(\d+)\]')
 # init conversation_list
 with open(group_conversation_path) as file:
     group_conversations = json.load(file)
@@ -126,7 +132,7 @@ async def shut_up(bot, ev):
     if group_id in conversation_list:
         del conversation_list[group_id]
         ai_chance.set_chance(group_id, 0)
-        await bot.send(ev, f'好的，如果你想我了，可以随时调整AI概率唤醒我哦.')
+        await bot.send(ev, f'好的，如果你想{NICKNAME_list[0]}了，可以随时调整AI概率唤醒我哦.')
         return
     await bot.send(ev, f'可我没说话啊?')
 
@@ -152,7 +158,7 @@ async def enable_aichat(bot, ev):
         conversation_list[group_id] = chat
         chat_dict = chat.to_dict()
         save_chat(group_id, chat_dict)
-    await bot.send(ev, f'人工智障已启用, 当前bot回复概率为{chance}%.')
+    await bot.send(ev, f'{NICKNAME_list[0]}已启用, 当前{NICKNAME_list[0]}回复概率为{chance}%.')
 
 @sv.on_fullmatch('当前AI概率')
 async def check_aichat(bot, ev):
@@ -160,7 +166,7 @@ async def check_aichat(bot, ev):
         chance = ai_chance.chance[str(ev.group_id)]
     except:
         chance = 0
-    await bot.send(ev, f'当前bot回复概率为{chance}%.')
+    await bot.send(ev, f'当前{NICKNAME_list[0]}回复概率为{chance}%.')
 
 @sv.on_message('group')
 @anti_conflict
@@ -169,6 +175,7 @@ async def ai_chat(bot, ev):
     group_id = str(ev.group_id)
     conversation_id = "_".join([qq, group_id])
     msg = ev['message'].extract_plain_text().strip()
+    print(f"AI: {msg}")
     if not msg:
     #没有文字，比如只是照片
         return
@@ -183,7 +190,9 @@ async def ai_chat(bot, ev):
     # 进行临时会话
         temp_chats[conversation_id] = True
         chat = conversation_list[conversation_id]
-        reply = chat.get_reply(msg)
+        loop = get_event_loop()
+        reply = await loop.run_in_executor(executor, chat.get_reply, msg)
+        # reply = chat.get_reply(msg)
         await bot.send(ev, reply)
         sv.logger.info(
             f"问题：{msg} ---- 回答：{reply}"
@@ -196,31 +205,49 @@ async def ai_chat(bot, ev):
     if group_id not in conversation_list:
     #未启动或者被闭嘴了
         return
-    if group_context_max != -1:
-    #记录群友昵称和群聊
-        chat = conversation_list[group_id]
-        info = await bot.get_group_member_info(
-                    group_id=int(ev.group_id), user_id=int(qq)
-                )
-        username = info.get("card", "") or info.get("nickname", "")
-        chat.add_group_context((username, msg))
+    chat = conversation_list[group_id]
     text = str(ev['message'])
+    qq_numbers = regex.findall(text)
+    qq_numbers.append(qq)
+    print(qq_numbers)
+    if group_id not in qq_to_username:
+        qq_to_username[group_id] = {}
+    for qq_number in qq_numbers:
+        if qq_number not in qq_to_username[group_id]:
+        # 获取群昵称
+            info = await bot.get_group_member_info(
+                        group_id=int(group_id), user_id=int(qq_number)
+                    )
+            username = info.get("card", "") or info.get("nickname", "")
+            qq_to_username[group_id][qq_number] = username
+    print(qq_to_username)
+    if group_context_max != 0:
+    # 输入群消息，即使不回复也会先输入，帮助以后的回复
+        username = qq_to_username[group_id][qq]
+        msg = regex.sub(lambda m: '@' + qq_to_username[group_id].get(m.group(1), m.group(1)), text)
+        msg = re.sub(r'\[CQ:[^]]+\]', '', msg)
+        msg = f"{username}：{msg}"
+        chat.add_group_context("user", msg)
     contains_keyword = False
-    if f'[CQ:at,qq={ev["self_id"]}]' in text:
+    if str(ev["self_id"]) in qq_numbers:
     #如果被艾特，则必定触发
         contains_keyword = True
     for words in Keywords:
     #如果被提到了关键字，则必定触发
         if words in msg:
             contains_keyword = True
-    if not contains_keyword and not random.randint(1,100) <= int(ai_chance.chance[str(ev.group_id)]):
+    if not contains_keyword and not random.randint(1,100) <= int(ai_chance.chance[str(group_id)]):
     #roll触发概率
         return
-    reply = ""
-    if group_context_max == -1:
-        reply = chat.get_reply(msg)
-    else:
-        reply = chat.get_group_reply(msg)
+    loop = get_event_loop()
+    reply = await loop.run_in_executor(executor, chat.get_group_reply, msg)
+    # 去掉前缀 "bot_name:"
+    split_symbols = [':', '：']
+    for symbol in split_symbols:
+        split_reply = reply.split(symbol)
+        if len(split_reply) > 1:
+            reply = symbol.join(split_reply[1:])
+            break
     await bot.send(ev, reply)
     sv.logger.info(
         f"问题：{msg} ---- 回答：{reply}"
@@ -231,19 +258,48 @@ async def ai_chat(bot, ev):
 @sv.on_prefix(prefix)
 async def prefix_chat(bot, ev):
     group_id = str(ev.group_id)
+    qq = str(ev.user_id)
     msg = ev.message.extract_plain_text()
     if group_id not in conversation_list:
         await bot.send(ev, "本群没开启群聊天功能,请先使用指令”调整AI概率+零到五十之间任意数字“初始化群聊天功能")
         return
     chat = conversation_list[group_id]
-    reply = chat.get_reply(msg)
+    text = str(ev['message'])
+    qq_numbers = regex.findall(text)
+    qq_numbers.append(qq)
+    if group_id not in qq_to_username:
+        qq_to_username[group_id] = {}
+    for qq_number in qq_numbers:
+        if qq_number not in qq_to_username[group_id]:
+        # 获取群昵称
+            info = await bot.get_group_member_info(
+                        group_id=int(group_id), user_id=int(qq_number)
+                    )
+            username = info.get("card", "") or info.get("nickname", "")
+            qq_to_username[group_id][qq_number] = username
+    if group_context_max != 0:
+    # 输入群消息，即使不回复也会先输入，帮助以后的回复
+        username = qq_to_username[group_id][qq]
+        msg = regex.sub(lambda m: '@' + qq_to_username[group_id].get(m.group(1), m.group(1)), text)
+        msg = re.sub(r'\[CQ:[^]]+\]', '', msg)
+        msg = f"{username}：{msg}"
+        chat.add_group_context("user", msg)
+    loop = get_event_loop()
+    reply = await loop.run_in_executor(executor, chat.get_group_reply, msg)
+    # 去掉前缀 "bot_name:"
+    split_symbols = [':', '：']
+    for symbol in split_symbols:
+        split_reply = reply.split(symbol)
+        if len(split_reply) > 1:
+            reply = symbol.join(split_reply[1:])
+            break
     await bot.send(ev, reply)
     sv.logger.info(
         f"问题：{msg} ---- 回答：{reply}"
     )
     chat_dict = chat.to_dict()
     save_chat(group_id, chat_dict)
-
+    
 @sv.on_fullmatch("清空群设定")
 async def clear_group_all(bot, ev):
     qq = str(ev.user_id) #TODO: check priv

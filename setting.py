@@ -2,13 +2,13 @@ import os
 import json
 
 settings = {
-    "config_file_name": "config.json",#文件名
-    "group_conversation_file_name": "group_conversation.json",#文件名
-    "temp_chat_file_name": "temp_chat.json",#文件名
-    "api_key": "",#openai 的 API key, https://platform.openai.com/account/api-keys
-    "prefix": "/t", #触发群AI的前缀
-    "group_context_max": 3, # 设置为-1则不会记录群聊，额外记录触发群AI前的3条消息，让群AI更加合群，重启丢失，不会保存这3条消息
-    "ai_chat_max_token": 100, #单条群AI回复内容的最大token数，大约50汉字的感觉
+    "config_file_name": "config.json",#AI概率文件名
+    "group_conversation_file_name": "group_conversation.json",#群AI文件名
+    "temp_chat_file_name": "temp_chat.json",#临时会话文件名
+    "api_key": "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",#openai 的 API key, https://platform.openai.com/account/api-keys
+    "prefix": ["/t"], #触发群AI的前缀
+    "group_context_max": 3, # 设置为-1则无限记录群聊，0则不记录，3则记录触发群AI前的最后3条消息，让群AI更加合群
+    "ai_chat_max_token": 200, #单条群AI回复内容的最大token数，大约50汉字的感觉
     "temp_chat_max_token": 500, #单条临时会话回复内容的最大token数，注意单次请求必须小于4096token，这包括回复内容和所有的聊天信息，如果超出可能openAPI会报错，我不确定
     "proxy": None, # 代理
     "model_used": "", # 无效参数，暂时默认gpt-3.5-turbo，以后有空再补上

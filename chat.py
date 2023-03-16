@@ -5,7 +5,8 @@ import re
 
 from typing import List
 from loguru import logger
-from asyncio import sleep
+from asyncio import sleep, get_event_loop
+from concurrent.futures import ThreadPoolExecutor
 from sqlitedict import SqliteDict
 import openai
 
@@ -62,6 +63,8 @@ else:
     NICKNAME_list = list(NICKNAME)
 Keywords.extend(NICKNAME_list)
 ai_chance = Config(CONFIG_PATH)
+
+executor = ThreadPoolExecutor()
 
 sv = Service(
     name="群AI&chatGPT",  # 功能名
@@ -172,6 +175,7 @@ async def ai_chat(bot, ev):
     group_id = str(ev.group_id)
     conversation_id = "_".join([qq, group_id])
     msg = ev['message'].extract_plain_text().strip()
+    print(f"AI: {msg}")
     if not msg:
     #没有文字，比如只是照片
         return
@@ -186,7 +190,9 @@ async def ai_chat(bot, ev):
     # 进行临时会话
         temp_chats[conversation_id] = True
         chat = conversation_list[conversation_id]
-        reply = chat.get_reply(msg)
+        loop = get_event_loop()
+        reply = await loop.run_in_executor(executor, chat.get_reply, msg)
+        # reply = chat.get_reply(msg)
         await bot.send(ev, reply)
         sv.logger.info(
             f"问题：{msg} ---- 回答：{reply}"
@@ -203,6 +209,7 @@ async def ai_chat(bot, ev):
     text = str(ev['message'])
     qq_numbers = regex.findall(text)
     qq_numbers.append(qq)
+    print(qq_numbers)
     if group_id not in qq_to_username:
         qq_to_username[group_id] = {}
     for qq_number in qq_numbers:
@@ -213,6 +220,7 @@ async def ai_chat(bot, ev):
                     )
             username = info.get("card", "") or info.get("nickname", "")
             qq_to_username[group_id][qq_number] = username
+    print(qq_to_username)
     if group_context_max != 0:
     # 输入群消息，即使不回复也会先输入，帮助以后的回复
         username = qq_to_username[group_id][qq]
@@ -231,7 +239,8 @@ async def ai_chat(bot, ev):
     if not contains_keyword and not random.randint(1,100) <= int(ai_chance.chance[str(group_id)]):
     #roll触发概率
         return
-    reply = chat.get_group_reply(msg)
+    loop = get_event_loop()
+    reply = await loop.run_in_executor(executor, chat.get_group_reply, msg)
     # 去掉前缀 "bot_name:"
     split_symbols = [':', '：']
     for symbol in split_symbols:
@@ -275,11 +284,15 @@ async def prefix_chat(bot, ev):
         msg = re.sub(r'\[CQ:[^]]+\]', '', msg)
         msg = f"{username}：{msg}"
         chat.add_group_context("user", msg)
-    reply = chat.get_group_reply(msg)
+    loop = get_event_loop()
+    reply = await loop.run_in_executor(executor, chat.get_group_reply, msg)
     # 去掉前缀 "bot_name:"
-    split_colon = reply.split("：")
-    if len(split_colon) > 1:
-        reply = "：".join(split_colon[1:])
+    split_symbols = [':', '：']
+    for symbol in split_symbols:
+        split_reply = reply.split(symbol)
+        if len(split_reply) > 1:
+            reply = symbol.join(split_reply[1:])
+            break
     await bot.send(ev, reply)
     sv.logger.info(
         f"问题：{msg} ---- 回答：{reply}"

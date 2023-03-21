@@ -37,7 +37,7 @@
 
 安装依赖`pip install sqlitedict`
 
-安装依赖`pip install collections`
+安装依赖`pip install collections`？可能不用装
 
 在`hoshino/modules/`的目录中克隆本插件`git clone https://github.com/joeyHXD/aichat_chatGPT_API.git`
 

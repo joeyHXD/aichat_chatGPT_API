@@ -7,6 +7,12 @@
 
 还加了一个反[eqa](https://github.com/pcrbot/erinilis-modules/tree/master/eqa)的并发，如果没装eqa就在`setting.py`里把`eqa_db_dir`那行改为`"eqa_db_dir" = "",`
 
+## 预计更新：
+1.查看群设定（已完成，暂时还没push）
+2.添加了AI语音（半完成，在修bug，还没push）
+3.长回复转化成图片发送（TODO）
+4.在群聊调整各种设置e.g.记录上限，临时会话时限，最大字数，触发词等（TODO）
+
 ## 相比隔壁的优点：
 0. 这个会一直读取你的群聊消息，并且随机冒泡
 1. 这个能读取发消息者的群昵称

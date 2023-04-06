@@ -8,6 +8,10 @@
 还加了一个反[eqa](https://github.com/pcrbot/erinilis-modules/tree/master/eqa)的并发，如果没装eqa就在`setting.py`里把`eqa_db_dir`那行改为`"eqa_db_dir" = "",`
 
 ## 预计更新：
+修复了继续临时会话无触发词的bug（未push）
+
+修复了能重复创建临时会话的bug（未push）
+
 1.查看群设定（已完成，暂时还没push）
 2.添加了AI语音（半完成，在修bug，还没push）
 3.长回复转化成图片发送（TODO）

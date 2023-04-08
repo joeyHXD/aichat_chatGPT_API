@@ -51,11 +51,13 @@
 
 安装依赖`pip install sqlitedict`
 
-安装依赖`pip install aiowebsocket` （新）
+安装依赖`pip install aiowebsocket` 
 
 在`hoshino/modules/`的目录中克隆本插件`git clone https://github.com/joeyHXD/aichat_chatGPT_API.git`
 
 在`hoshino`的目录中加入[反并发`tool.py`](https://github.com/lhhxxxxx/hoshino_tool),注意是在hoshino目录下面，不是modules,如果反并发报错说明你的星乃该更新了
+
+去 [deepL官网](https://www.deepl.com/translator) 获取翻译用的API key（非必需）
 
 去 [openai官网](https://platform.openai.com/account/api-keys) 获取API key
 

@@ -43,6 +43,8 @@ Keywords.extend(NICKNAME_list)
 
 executor = ThreadPoolExecutor()
 
+executor = ThreadPoolExecutor()
+
 sv = Service(
     name="群AI&chatGPT",  # 功能名
     visible=True,  # 可见性
@@ -152,6 +154,7 @@ async def ai_chat(bot, ev):
     group_id = str(ev.group_id)
     conversation_id = "_".join([qq, group_id])
     msg = ev['message'].extract_plain_text().strip()
+    print(f"AI: {msg}")
     if not msg:
     #没有文字，比如只是照片
         return

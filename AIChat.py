@@ -60,8 +60,6 @@ class AIChat:
         if self.group_context_max == 0:
             return self.get_reply(msg)
         try:
-            print(len(self.messages))
-            print(f"group_context: {len(self.group_context)}")
             response = self.get_full_response(self.messages + list(self.group_context))
             reply = response["choices"][0]["message"]["content"].strip()
             # reply = re.sub(r'@(\S+)', '', reply)
@@ -71,7 +69,6 @@ class AIChat:
             self.full_token_cost += token_cost
             return reply
         except openai.error.OpenAIError as e:
-            print(e.http_status)
             print(e.http_body['type'])
             try:
                 return f"error {e.http_status}: {e.http_body['type']}"
@@ -83,7 +80,6 @@ class AIChat:
         self.messages.append(message)
 
     def get_full_response(self, messages):
-        print(messages)
         response = openai.ChatCompletion.create(
             model=self.model,
             messages=messages,
@@ -106,8 +102,12 @@ class AIChat:
             self.full_token_cost += token_cost
             return reply
         except openai.error.OpenAIError as e:
+            try:
+                return f"error {e.http_status}: {e.http_body['type']}"
+            except:
+                return str(e.http_body)
             return e._message
-    
+
     def get_system_inputs(self):
     # get existing system inputs
         all_system_inputs = []
@@ -116,7 +116,7 @@ class AIChat:
             if message["role"] == "system":
                 all_system_inputs.append(message["content"])
         return all_system_inputs
-        
+
     def add_conversation_setting(self, msg: str):
         self.add_conversation_msg("system", msg)
 

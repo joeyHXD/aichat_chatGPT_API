@@ -4,20 +4,21 @@ from numbers import Number
 import openai
 import re
 from collections import deque
+
 class AIChat:
     def __init__(
                 self,
-                messages:List[Dict[str, str]] = [],
-                conversation_id: str = "",
-                qq: str = "",
-                group_id: str = "",
-                bot_name = "",
+                messages:List[Dict[str, str]] = [], # 无限储存msg，群消息保存在group_context里
+                conversation_id: str = "", # 给临时会话用的id
+                qq: str = "", # 临时会话使用者的qq号，无效参数，仅用来判断是否临时会话
+                group_id: str = "", # 给群AI用的id
+                bot_name = "", # 群AI的自己认可的名字
                 model: str = "gpt-3.5-turbo-0301", # "gpt-3.5-turbo" or "gpt-3.5-turbo-0301"
-                temperature: Number = 1, # between 0 and 2
-                max_tokens: int = 1000, # not recommend but max = 4096
-                presence_penalty: Number = 0, # between -2.0 and 2.0
-                frequency_penalty: Number = 0, # between -2.0 and 2.0
-                group_context_max: int = 3
+                temperature: Number = 1, # 生成内容的自由/随机性 between 0 and 2
+                max_tokens: int = 1000, # 生成每段话使用的最大token数。not recommend but max = 4096
+                presence_penalty: Number = 0, # 降低重复话题的概率 between -2.0 and 2.0
+                frequency_penalty: Number = 0, # 降低复读的概率 between -2.0 and 2.0
+                group_context_max: int = 3 # 记录群消息，临时会话不需要这个
     ):
         if qq:
         # 如果是临时会话则不添加预设定
@@ -27,14 +28,11 @@ class AIChat:
             self.messages = [
                     {"role": "system", "content":  
                     f"""你的名字是“{bot_name}”，你应该假装自己是一个人类，我会提供一些聊天记录，就好像这样：
-                    摸余：早
-                    袋鼠：早什么早,听好，早上要说我爱你
-                    摸余：啊这
-                    这里“摸余”和“袋鼠”都是群昵称。你要当作自己就在群里，并且恰当地加入会话。
-                    如果不知道说什么，可以:
-                    1. 根据当前讨论的话题，提供相关的信息或见解。
-                    2. 提供幽默和娱乐性
-                    绝对不可以单纯复述别人的话"""},
+摸余：早
+袋鼠：早什么早,听好，早上要说我爱你
+摸余：啊这
+这里“摸余”和“袋鼠”都是群昵称。你要当作自己就在群里，并且恰当地加入会话。
+如果不知道说什么，可以分析一下群友的心理"""},
                     {"role": "system", "content":  "绝对不可以复述别人的话, 也绝对不可以@别人"}]
         self.conversation_id = conversation_id
         self.qq = qq
@@ -109,7 +107,16 @@ class AIChat:
             return reply
         except openai.error.OpenAIError as e:
             return e._message
-
+    
+    def get_system_inputs(self):
+    # get existing system inputs
+        all_system_inputs = []
+        print(self.messages)
+        for message in self.messages:
+            if message["role"] == "system":
+                all_system_inputs.append(message["content"])
+        return all_system_inputs
+        
     def add_conversation_setting(self, msg: str):
         self.add_conversation_msg("system", msg)
 

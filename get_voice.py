@@ -29,7 +29,6 @@ async def chinese2katakana(text):
         '__utma': '79062217.169553450.1660228904.1660228904.1660228904.1',
         '__utmb': '79062217.4.10.1660228909',
     }
-
     headers = {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
         'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',

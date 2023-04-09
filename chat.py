@@ -244,7 +244,7 @@ async def ai_chat(bot, ev):
         await bot.send(ev, reply)
     chat_dict = chat.to_dict()
     save_chat(group_id, chat_dict)
-    if cf.voice:
+    if chat.voice:
     # 使用DeepL翻译成日文
     # 使用MoeTTS的ATRI语音API，最大只能读50字
         text = translator.translate_text(reply, target_lang="JA").text

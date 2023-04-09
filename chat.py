@@ -8,6 +8,7 @@ from asyncio import sleep, get_event_loop
 from concurrent.futures import ThreadPoolExecutor
 from sqlitedict import SqliteDict
 import openai
+import deepl
 
 from hoshino import R, Service, priv
 from hoshino.tool import anti_conflict
@@ -16,6 +17,7 @@ from hoshino.typing import MessageSegment
 from .setting import Config
 from .AIChat import AIChat
 from .text2img import image_draw
+from .get_voice import voiceApi, getvoice
 
 # 获取初始设定
 cf = Config()
@@ -23,11 +25,8 @@ Keywords = cf.Keywords
 openai.api_key = cf.api_key
 openai.proxy = cf.proxy
 model_used = cf.model_used # 无效参数
-if cf.voice:
-    import deepl
-    from .get_voice import voiceApi, getvoice
+if cf.deepL_api:
     translator = deepl.Translator(cf.deepL_api)
-
 group_conversation_path = os.path.join(os.path.dirname(__file__), cf.group_conversation_file_name)
 temp_chat_path = os.path.join(os.path.dirname(__file__), cf.temp_chat_file_name)
 
@@ -132,8 +131,12 @@ async def enable_aichat(bot, ev):
             group_id = group_id,
             model = cf.model_used,
             max_tokens = cf.ai_chat_max_token,
-            group_context_max = cf.group_context_max
+            group_context_max = cf.group_context_max,
+            voice = cf.voice
         )
+        if group_id in group_conversations:
+            conversation = group_conversations[group_id]
+            chat.load_dict(conversation)
         conversation_list[group_id] = chat
         chat_dict = chat.to_dict()
         save_chat(group_id, chat_dict)
@@ -177,7 +180,12 @@ async def ai_chat(bot, ev):
         )
         if len(reply) > cf.max_len_image_draw:
             pic = image_draw(reply)
-            await bot.send(ev, f'[CQ:image,file={pic}]')
+            try:
+                await bot.send(ev, f'[CQ:image,file={pic}]')
+            except:
+                sv.logger.info(f"临时会话图片发送失败")
+                await bot.send(ev, "图片发送失败")
+                await bot.send(ev, reply)
         else:
             await bot.send(ev, reply)
         return
@@ -239,7 +247,12 @@ async def ai_chat(bot, ev):
     )
     if len(reply) > cf.max_len_image_draw:
         pic = image_draw(reply)
-        await bot.send(ev, f'[CQ:image,file={pic}]')
+        try:
+            await bot.send(ev, f'[CQ:image,file={pic}]')
+        except:
+            sv.logger.info(f"群AI图片发送失败")
+            await bot.send(ev, "图片发送失败")
+            await bot.send(ev, reply)
     else:
         await bot.send(ev, reply)
     chat_dict = chat.to_dict()
@@ -248,7 +261,6 @@ async def ai_chat(bot, ev):
     # 使用DeepL翻译成日文
     # 使用MoeTTS的ATRI语音API，最大只能读50字
         text = translator.translate_text(reply, target_lang="JA").text
-        character = "ATRI"
         if len(text) > 50:
             text = text.split("。")[0]
         if len(text) > 50:
@@ -331,9 +343,7 @@ async def continue_temp_chat(bot, ev):
                     qq = qq,
                     group_id = group_id,
                     model = cf.model_used,
-                    max_tokens = cf.temp_chat_max_token,
-                    group_context_max = cf.group_context_max
-
+                    max_tokens = cf.temp_chat_max_token
         )
         with open(temp_chat_path) as file:
             temp_chat_record = json.load(file)
@@ -373,8 +383,7 @@ async def start_temp_chat(bot, ev):
                 qq = qq,
                 group_id = group_id,
                 model = cf.model_used,
-                max_tokens = cf.temp_chat_max_token,
-                group_context_max = cf.group_context_max
+                max_tokens = cf.temp_chat_max_token
     )
     conversation_list[conversation_id] = chat
     temp_chats[conversation_id] = False
@@ -461,7 +470,7 @@ async def change_group_context_max(bot, ev):
     save_chat(group_id, chat_dict)
     await bot.send(ev, f"塑料记忆已修改成{group_context_max}。请注意bot能处理的token数是有上限的，她不能陪伴你一身。")
 
-@sv.on_fullmatch('看看内裤') # 查看所有信息
+@sv.on_fullmatch('看看胖次') # 查看所有信息
 async def check_settings(bot, ev):
     qq = str(ev.user_id)
     group_id = str(ev.group_id)
@@ -471,4 +480,46 @@ async def check_settings(bot, ev):
     chat = conversation_list[group_id]
     reply = json.dumps(chat.to_dict(), indent=2, ensure_ascii=False)
     pic = image_draw(reply)
-    await bot.send(ev, f'[CQ:image,file={pic}]')
+    try:
+        await bot.send(ev, f'[CQ:image,file={pic}]')
+    except:
+        sv.logger.info(f"看看胖次图片发送失败")
+        await bot.send(ev, "图片发送失败，可能是风控，或者网络问题，请稍后再试")
+
+@sv.on_fullmatch("启动语音")
+async def enable_voice(bot, ev):
+    group_id = str(ev.group_id)
+    if not cf.deepL_api:
+        await bot.send(ev, "请先设置deepL的API")
+        return
+    if group_id not in conversation_list:
+        await bot.send(ev, "本群没开启群聊天功能,请先使用指令”调整AI概率+零到五十之间任意数字“初始化群聊天功能")
+        return
+    chat = conversation_list[group_id]
+    chat.voice = True
+    chat_dict = chat.to_dict()
+    save_chat(group_id, chat_dict)
+    reply = "语音启动，test test~听得到吗？"
+    await bot.send(ev, reply)
+    text = translator.translate_text(reply, target_lang="JA").text
+    sv.logger.info(f"翻译：{text}")
+    A = getvoice("ATRI",29)
+    voice = await A.gethash(text)
+    final_voice = MessageSegment.record(voice)
+    await bot.send(ev, final_voice)
+
+@sv.on_fullmatch("禁用语音")
+async def enable_voice(bot, ev):
+    group_id = str(ev.group_id)
+    if group_id not in conversation_list:
+        await bot.send(ev, "本群没开启群聊天功能,请先使用指令”调整AI概率+零到五十之间任意数字“初始化群聊天功能")
+        return
+    chat = conversation_list[group_id]
+    if chat.voice == False:
+        await bot.send(ev, "ok") #本来就是关着的
+        return
+    chat.voice = False
+    chat_dict = chat.to_dict()
+    save_chat(group_id, chat_dict)
+    reply = f"欸？哥哥不要听我说话了吗？{NICKNAME_list[0]}是说错话了吗？"
+    await bot.send(ev, reply)

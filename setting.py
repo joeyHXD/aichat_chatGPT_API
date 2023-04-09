@@ -9,7 +9,7 @@ class Config:
         "temp_chat_file_name": "temp_chat.json",# 临时会话文件名
         "voice": False, # 是否开启语音
         "deepL_api": "", # deepL 的API key, 如果要语音功能才需要
-        "api_key": "",# openai 的 API key, https://platform.openai.com/account/api-keys
+        "api_key": "", # openai 的 API key, https://platform.openai.com/account/api-keys
         "prefixes": ["/t"], # 触发群AI的前缀,如果不要前缀就改成[],改成[""]会让bot每句话都触发
         "group_context_max": 10, # 设置为-1则无限记录群聊，0则不记录，3则记录触发群AI前的最后3条消息，让群AI更加合群
         "ai_chat_max_token": 200, # 单条群AI回复内容的最大token数，大约100汉字的感觉
@@ -48,6 +48,11 @@ class Config:
 8. 继续临时会话：继续你上次的临时chatGPT会话
 9. 结束临时会话：提前结束你的临时chatGPT会话
 10. /t + 内容：用前缀"/t"触发群AI，可在setting.py里修改前缀
+11. 查看群设定
+12. 调整上限：调整群AI每句话使用的token
+13. 调整记忆：调整群AI能记住的群消息
+14. 看看胖次：查看群AI的所有信息
+15. 启动/禁用语音：ATRI语音
 """
     }
     def __init__(self):

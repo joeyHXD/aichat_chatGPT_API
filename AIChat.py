@@ -18,7 +18,8 @@ class AIChat:
                 max_tokens: int = 1000, # 生成每段话使用的最大token数。not recommend but max = 4096
                 presence_penalty: Number = 0, # 降低重复话题的概率 between -2.0 and 2.0
                 frequency_penalty: Number = 0, # 降低复读的概率 between -2.0 and 2.0
-                group_context_max: int = 3 # 记录群消息，临时会话不需要这个
+                group_context_max: int = 3, # 记录群消息，临时会话不需要这个
+                voice: bool = False
     ):
         if qq:
         # 如果是临时会话则不添加预设定
@@ -50,6 +51,7 @@ class AIChat:
             self.group_context = deque([], group_context_max + 1)
         self.full_token_cost = 0
         self.last_token_cost = 0
+        self.voice = voice
 
     def add_group_context(self, role, msg):
         message = {"role": role, "content": msg}
@@ -60,8 +62,6 @@ class AIChat:
         if self.group_context_max == 0:
             return self.get_reply(msg)
         try:
-            print(len(self.messages))
-            print(f"group_context: {len(self.group_context)}")
             response = self.get_full_response(self.messages + list(self.group_context))
             reply = response["choices"][0]["message"]["content"].strip()
             # reply = re.sub(r'@(\S+)', '', reply)
@@ -159,7 +159,8 @@ class AIChat:
             "group_context": list(self.group_context),
             "group_context_max": self.group_context_max,
             "full_token_cost": self.full_token_cost,
-            "last_token_cost": self.last_token_cost
+            "last_token_cost": self.last_token_cost,
+            "voice": self.voice
         }
         return output
 
@@ -174,6 +175,15 @@ class AIChat:
         self.presence_penalty = conversation["presence_penalty"]
         self.frequency_penalty = conversation["frequency_penalty"]
         self.group_context_max = conversation["group_context_max"]
+        if self.group_context_max == -1:
+            self.group_context = deque([])
+        else:
+            self.group_context = deque([], self.group_context_max + 1)
         self.group_context.extend(conversation["group_context"])
         self.full_token_cost = conversation["full_token_cost"]
         self.last_token_cost = conversation["last_token_cost"]
+        try:
+            self.voice = conversation["voice"]
+        except:
+            conversation["voice"] = False
+            self.voice = False

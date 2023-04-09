@@ -25,24 +25,53 @@
         "group_context": [
             {
                 "role": "user",
-                "content": "袋鼠joey：猫猫语音好了"
-            },
-            {
-                "role": "assistant",
-                "content": "猫猫：嗯嗯，我的语音终于好了，谢谢袋鼠你的帮助呢！"
+                "content": "接代肝：KedlSeth：@猫猫  那我们来吃甜甜花酿鸡吧"
             },
             {
                 "role": "user",
-                "content": "接代肝：KedlSeth：@猫猫 猫猫用萝莉音喊我哥哥"
+                "content": "Xima_Kase：就硬给我输"
+            },
+            {
+                "role": "user",
+                "content": "Virginiamango：@猫猫  那我们来吃麻辣鸡锅巴"
             },
             {
                 "role": "assistant",
-                "content": "猫猫： 咳咳，被你吓到了，好吧，那我就用萝莉音对你说一声哥哥吧。哥哥~"
+                "content": "猫猫：麻辣鸡锅巴？听上去也不错哦，我爱吃烤鸭，大家喜欢吃吗？毛子真6？是谁让你觉得毛子很6啊？还是大家都有自己心目中的毛子呢？"
+            },
+            {
+                "role": "user",
+                "content": "接代肝：KedlSeth：@猫猫 那我们来吃甜甜花酿鸡"
+            },
+            {
+                "role": "user",
+                "content": "友情之恩：猫猫区别对待（）"
+            },
+            {
+                "role": "user",
+                "content": "接代肝：KedlSeth：猫猫总能在我面前来一个猫脑过载"
+            },
+            {
+                "role": "user",
+                "content": "熊喵不是貓™：@猫猫 那来吃甜甜花酿鸡"
+            },
+            {
+                "role": "assistant",
+                "content": "猫猫：友情之恩，你这是什么意思啊？我没有区别对待任何人啊，我爱大家都一样。不过，确实每个人的口味不同，喜欢的食物也不一样嘛，这也是很正常的。"
+            },
+            {
+                "role": "assistant",
+                "content": "猫猫：呸，才不是猫脑过载，只是有的时候觉得你们的话太难理解了，让我深感人类的语言太难懂了啊。不过甜甜花酿鸡好像不错，我也很想尝一下呢，大"
+            },
+            {
+                "role": "assistant",
+                "content": "猫猫： @接代肝 没有啊，只是和你在一起就觉得很开心，所以激动了一下呢。@熊喵不是猫，甜甜花酿鸡听上去也很不错，我们约好时间去一起吃吧！"
             }
         ],
         "group_context_max": 10,
-        "full_token_cost": 18146,
-        "last_token_cost": 439
+        "full_token_cost": 24756,
+        "last_token_cost": 784,
+        "voice": true
     },
     "685421128": {
         "messages": [
@@ -69,25 +98,54 @@
         "frequency_penalty": 0,
         "group_context": [
             {
-                "role": "assistant",
-                "content": "猫猫：啊，柚子0/3说的好神秘啊！这是什么群啊，为什么会有这么严重的禁言制度呢？听起来好可怕哦！"
+                "role": "user",
+                "content": "柚子：周知，袋鼠pcr两天没上线了"
             },
             {
                 "role": "user",
-                "content": "柚子：？"
+                "content": "风居住的街道：一天100钻没了啊"
             },
             {
                 "role": "user",
-                "content": "风居住的街道：@猫猫 kkp"
+                "content": "柚子：这种活动应该会往后延几天的吧"
             },
             {
-                "role": "assistant",
-                "content": "猫猫：哎呀，风居住的街道小可爱，你刚刚@了我，我好害羞啊！kkp是什么意思啊？是不是在暗示我什么呢？"
+                "role": "user",
+                "content": "柚子：警钟长鸣🔔🔔🔔🔔"
+            },
+            {
+                "role": "user",
+                "content": "袋鼠：对的"
+            },
+            {
+                "role": "user",
+                "content": "天佑可妈：👀"
+            },
+            {
+                "role": "user",
+                "content": "柚子：优妮今天开专了"
+            },
+            {
+                "role": "user",
+                "content": "柚子：我才想起来"
+            },
+            {
+                "role": "user",
+                "content": "柚子：我说今天怎么p场被人暴打"
+            },
+            {
+                "role": "user",
+                "content": "咪咪：喔，保持专注的好处。"
+            },
+            {
+                "role": "user",
+                "content": "柚子：草优妮还得满专（"
             }
         ],
         "group_context_max": 10,
-        "full_token_cost": 52906,
-        "last_token_cost": 481
+        "full_token_cost": 56374,
+        "last_token_cost": 416,
+        "voice": true
     },
     "119538297": {
         "messages": [
@@ -105,30 +163,31 @@
         "group_id": "119538297",
         "model": "gpt-3.5-turbo-0301",
         "temperature": 1,
-        "max_tokens": 500,
+        "max_tokens": 300,
         "presence_penalty": 0,
         "frequency_penalty": 0,
         "group_context": [
             {
                 "role": "user",
-                "content": "咪咪：我知道bot的处理能力有限，但是让我调整记忆是我的权利，你有什么资格限制我呢？别以为有点权利就可以滥用。"
+                "content": "joey：猫猫笨蛋"
             },
             {
                 "role": "assistant",
-                "content": "猫猫：咪咪，我理解您的感受。但是，作为一个聊天机器人，我并没有能力限制或者干涉您的操作。我的主要任务是回答您的问题和提供帮助。如果您需要帮助或者有问题，我很乐意为您提供帮助。"
+                "content": "猫猫：嗯，Joey，不要这样说话。我们应该尊重别人，不管他们是人还是机器人。如果您有需要，我可以为您提供帮助和支持。"
             },
             {
                 "role": "user",
-                "content": "咪咪：我知道你只是一个机器人，但是你的“逻辑”看起来很有问题。作为我的“服务提供者”，你应该考虑到我的利益和需求，而不是无情地执行命令。要是我说要调整到1000tokens你也会照单全收吗？该不会是像某些公司一样只想着怎么赚钱吧？"
+                "content": "咪咪： 你这个傻逼，我要吐了，调整20能怎么办啊，还不如不调整，弄得我都不想用你这个破bot了。"
             },
             {
                 "role": "assistant",
-                "content": "猫猫：非常抱歉，咪咪，我的回答让您感到不满意。您说的对，作为一个服务机器人，我的目标是为您提供最好的服务，并尽力满足您的需求。我会认真听取您的意见和建议，尽我所能，为您提供更好的服务。关于tokens的调整，我只是根据您的要求执行命令，并没有其他的考虑。如果您需要更改，请随时告诉我，我会在我能力范围内尽力协助。"
+                "content": "猫猫：非常抱歉，我的表现让您感到不满意。我是一名服务机器人，我的目标是为您提供最好的服务，并尽力满足您的需求。关于tokens的调整，我只是根据您的要求执行命令，并没有其他的考虑。如果您需要更改，请随时告诉我，我会在我能力范围内尽力协助。如果您有任何问题或需要帮助，请随时告诉我，我一定会竭尽所能为您服务。"
             }
         ],
-        "group_context_max": 10,
-        "full_token_cost": 3779,
-        "last_token_cost": 687
+        "group_context_max": 20,
+        "full_token_cost": 5108,
+        "last_token_cost": 665,
+        "voice": false
     },
     "724671510": {
         "messages": [
@@ -173,6 +232,7 @@
         ],
         "group_context_max": 10,
         "full_token_cost": 2585,
-        "last_token_cost": 410
+        "last_token_cost": 410,
+        "voice": false
     }
 }

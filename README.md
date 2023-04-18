@@ -40,6 +40,8 @@
 
 安装依赖`pip install openai`
 
+安装依赖`pip install deepl`
+
 安装依赖`pip install sqlitedict`
 
 安装依赖`pip install aiowebsocket` 

@@ -122,7 +122,7 @@ async def enable_aichat(bot, ev):
         else:
             await bot.finish(ev, '参数错误: 请输入0-50之间的整数.')
     else:
-        chance = DEFAULT_AI_CHANCE     # 后面不接数字时调整为默认概率
+        chance = cf.DEFAULT_AI_CHANCE     # 后面不接数字时调整为默认概率
     cf.set_chance(str(ev.group_id), chance)
     group_id = str(ev.group_id)
     if group_id not in conversation_list:
@@ -202,6 +202,7 @@ async def ai_chat(bot, ev):
     # 检查前缀，text会包含CQ码，所以用msg，不是bug
         if msg.startswith(prefix):
             contains_keyword = True
+            msg = msg.lstrip(prefix)  # 实际问答中移除前缀
     text = str(ev['message'])
     qq_numbers = regex.findall(text)
     # 检查所有被艾特的QQ号

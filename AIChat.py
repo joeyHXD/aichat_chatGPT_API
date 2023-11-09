@@ -70,8 +70,9 @@ class AIChat:
             self.last_token_cost = token_cost
             self.full_token_cost += token_cost
             return reply
-        except openai.error.OpenAIError as e:
-            print(e.http_body['type'])
+        #except openai.error.OpenAIError as e:
+        except Exception as e:
+            # print(e.http_body['type'])
             try:
                 return f"error {e.http_status}: {e.http_body['type']}"
             except:

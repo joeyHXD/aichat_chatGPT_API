@@ -56,6 +56,8 @@ conversation_list = {} #TODO: change variable name to conversation_dict
 temp_chats = {}
 qq_to_username = {}
 regex = re.compile(r'\[CQ:at,qq=(\d+)\]')
+regex_image = re.compile(r'\[CQ:image,file=[a-fA-F0-9]{32},url=(https?://gchat.qpic.cn/gchatpic_new/0/0-\d+-[a-fA-F0-9]{32}/0\?term=2)\]')  # 用于匹配消息中的图片
+# 山姆摇滚上报的消息里，file=小写md5，http大写md5。gocq待测试
 # init conversation_list
 with open(group_conversation_path, encoding="utf-8") as file:
     group_conversations = json.load(file)
@@ -157,6 +159,9 @@ async def ai_chat(bot, ev):
     group_id = str(ev.group_id)
     conversation_id = "_".join([qq, group_id])
     msg = ev['message'].extract_plain_text().strip()
+    # print(ev.raw_message)
+    images = regex_image.findall(ev.raw_message)  # 这里把消息中的图片全部取出来
+    # print(images)
     print(f"AI: {msg}")
     if not msg:
     #没有文字，比如只是照片
@@ -198,12 +203,16 @@ async def ai_chat(bot, ev):
         return
     chat = conversation_list[group_id]
     contains_keyword = False
+    text_ok = False  # 用于group_context记录中，移除前缀
     for prefix in cf.prefixes:
     # 检查前缀，text会包含CQ码，所以用msg，不是bug
         if msg.startswith(prefix):
             contains_keyword = True
             msg = msg.lstrip(prefix)  # 实际问答中移除前缀
-    text = str(ev['message'])
+            text = str(ev['message']).lstrip(prefix)
+            text_ok = True
+    if not text_ok:
+        text = str(ev['message'])
     qq_numbers = regex.findall(text)
     # 检查所有被艾特的QQ号
     qq_numbers.append(qq)
@@ -222,7 +231,18 @@ async def ai_chat(bot, ev):
         username = qq_to_username[group_id][qq]
         msg = regex.sub(lambda m: '@' + qq_to_username[group_id].get(m.group(1), m.group(1)), text)
         msg = re.sub(r'\[CQ:[^]]+\]', '', msg)
-        msg = f"{username}：{msg}"
+        if len(images) > 0:
+            # 消息中存在图片，按照OpenAI api官网的格式存
+            msg = [{"type": "text", "text": f"{username}：{msg}"}]
+            for image in images:
+                msg.append(
+                        {
+                            "type": "image_url", 
+                            "image_url": {"url": image}
+                        }
+                    )
+        else:
+            msg = f"{username}：{msg}"
         chat.add_group_context("user", msg)
     if str(ev["self_id"]) in qq_numbers:
     #如果被艾特，则必定触发

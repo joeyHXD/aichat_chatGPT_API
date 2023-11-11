@@ -175,6 +175,16 @@ async def ai_chat(bot, ev):
         return
     if conversation_id in temp_chats:
     # 进行临时会话
+        if len(images) > 0:
+            # 消息中存在图片，按照OpenAI api官网的格式存
+            msg = [{"type": "text", "text": f"{msg}"}]
+            for image in images:
+                msg.append(
+                        {
+                            "type": "image_url", 
+                            "image_url": {"url": image}
+                        }
+                    )
         temp_chats[conversation_id] = True
         chat = conversation_list[conversation_id]
         loop = get_event_loop()

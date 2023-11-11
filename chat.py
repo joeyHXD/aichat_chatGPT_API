@@ -56,8 +56,8 @@ conversation_list = {} #TODO: change variable name to conversation_dict
 temp_chats = {}
 qq_to_username = {}
 regex = re.compile(r'\[CQ:at,qq=(\d+)\]')
-regex_image = re.compile(r'\[CQ:image,file=[a-fA-F0-9]{32},url=(https?://gchat.qpic.cn/gchatpic_new/0/0-\d+-[a-fA-F0-9]{32}/0\?term=2)\]')  # 用于匹配消息中的图片
-# 山姆摇滚上报的消息里，file=小写md5，http大写md5。gocq待测试
+regex_image = re.compile(r'\[CQ:image,file=[a-fA-F0-9]{32}.*?,url=(https?://gchat.qpic.cn/gchatpic_new/\d+/\d+-\d+-[a-fA-F0-9]{32}/0\?term=\d.*?)\]')  # 用于匹配消息中的图片
+# gocq和山姆摇滚的图片上报稍有不同。已测试这么写都能适配。
 # init conversation_list
 with open(group_conversation_path, encoding="utf-8") as file:
     group_conversations = json.load(file)

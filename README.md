@@ -9,6 +9,11 @@
 
 还加了一个反[eqa](https://github.com/pcrbot/erinilis-modules/tree/master/eqa)的并发，如果没装eqa就在`setting.py`里把`eqa_db_dir`那行改为`"eqa_db_dir" = "",`
 
+如果要使用gpt4的图片输入能力，请在`setting.py`里把默认模型修改为`gpt-4-vision-preview`；如果群AI已经开启，需要在`group_conversation.json`文件中修改对应群聊的模型为`gpt-4-vision-preview`   
+（不过目前来看token费率还是gpt3-turbo的10倍，有亿点贵）  
+
+模型名称可能会变，以[API官网](https://platform.openai.com/account/limits)或携带api_key请求 [https://api.openai.com/v1/models](https://api.openai.com/v1/models) 的结果为准
+
 ## 新更新：
 新更新需要aiowebsocket
 
@@ -17,6 +22,7 @@
 2. 添加了[AI语音](https://github.com/SonderXiaoming/youzi_voice)（目前只能用ATRI的语音）
 3. 长回复转化成图片发送
 4. 在群聊调整各种设置e.g.记录上限，最大字数
+5. 支持gpt-4vision模型的图片输入
 
 ## 全部指令：
 0. @bot+闭嘴：禁用群AI(临时会话不会受影响)
@@ -38,7 +44,7 @@
 
 ## 安装指南：
 
-安装依赖`pip install openai`
+安装依赖`pip install openai == 0.28`
 
 安装依赖`pip install deepl`
 
@@ -60,7 +66,11 @@
 
 然后重启 HoshinoBot，并在想要使用的QQ群里输入指令 `启用 群AI&chatGPT`和`调整AI概率`
 
-临时会话的示范图：![image](https://user-images.githubusercontent.com/68325229/222948188-5dab4051-d422-495a-a2f2-ba9ef2eb8c9b.png)
+临时会话的示范图：  
+![image](https://user-images.githubusercontent.com/68325229/222948188-5dab4051-d422-495a-a2f2-ba9ef2eb8c9b.png)
+
+图片支持：
+![正在做了](https://s2.loli.net/2023/11/12/6HvSY4Xc3s9rx8B.png)
 
 ## 如果不知道使用什么群设定：
 

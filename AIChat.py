@@ -70,8 +70,9 @@ class AIChat:
             self.last_token_cost = token_cost
             self.full_token_cost += token_cost
             return reply
-        except openai.error.OpenAIError as e:
-            print(e.http_body['type'])
+        #except openai.error.OpenAIError as e:
+        except Exception as e:
+            # print(e.http_body['type'])
             try:
                 return f"error {e.http_status}: {e.http_body['type']}"
             except:
@@ -82,6 +83,12 @@ class AIChat:
         self.messages.append(message)
 
     def get_full_response(self, messages):
+        # 这里需要做点修改，如果模型中不包含'vision'。则需要整理一下content，移除image_url
+        # 直接用list中第一个dict的text替换整个list。
+        if "vision" not in self.model:
+            for message in messages:
+                if message['role'] == "user" and type(message['content']) == list:
+                    message['content'] = message['content'][0]['text']
         response = openai.ChatCompletion.create(
             model=self.model,
             messages=messages,

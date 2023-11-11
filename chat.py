@@ -56,6 +56,8 @@ conversation_list = {} #TODO: change variable name to conversation_dict
 temp_chats = {}
 qq_to_username = {}
 regex = re.compile(r'\[CQ:at,qq=(\d+)\]')
+regex_image = re.compile(r'\[CQ:image,file=[a-fA-F0-9]{32}.*?,url=(https?://gchat.qpic.cn/gchatpic_new/\d+/\d+-\d+-[a-fA-F0-9]{32}/0\?term=\d.*?)\]')  # 用于匹配消息中的图片
+# gocq和山姆摇滚的图片上报稍有不同。已测试这么写都能适配。
 # init conversation_list
 with open(group_conversation_path, encoding="utf-8") as file:
     group_conversations = json.load(file)
@@ -122,7 +124,7 @@ async def enable_aichat(bot, ev):
         else:
             await bot.finish(ev, '参数错误: 请输入0-50之间的整数.')
     else:
-        chance = DEFAULT_AI_CHANCE     # 后面不接数字时调整为默认概率
+        chance = cf.DEFAULT_AI_CHANCE     # 后面不接数字时调整为默认概率
     cf.set_chance(str(ev.group_id), chance)
     group_id = str(ev.group_id)
     if group_id not in conversation_list:
@@ -157,6 +159,9 @@ async def ai_chat(bot, ev):
     group_id = str(ev.group_id)
     conversation_id = "_".join([qq, group_id])
     msg = ev['message'].extract_plain_text().strip()
+    # print(ev.raw_message)
+    images = regex_image.findall(ev.raw_message)  # 这里把消息中的图片全部取出来
+    # print(images)
     print(f"AI: {msg}")
     if not msg:
     #没有文字，比如只是照片
@@ -170,6 +175,16 @@ async def ai_chat(bot, ev):
         return
     if conversation_id in temp_chats:
     # 进行临时会话
+        if len(images) > 0:
+            # 消息中存在图片，按照OpenAI api官网的格式存
+            msg = [{"type": "text", "text": f"{msg}"}]
+            for image in images:
+                msg.append(
+                        {
+                            "type": "image_url", 
+                            "image_url": {"url": image}
+                        }
+                    )
         temp_chats[conversation_id] = True
         chat = conversation_list[conversation_id]
         loop = get_event_loop()
@@ -198,11 +213,16 @@ async def ai_chat(bot, ev):
         return
     chat = conversation_list[group_id]
     contains_keyword = False
+    text_ok = False  # 用于group_context记录中，移除前缀
     for prefix in cf.prefixes:
     # 检查前缀，text会包含CQ码，所以用msg，不是bug
         if msg.startswith(prefix):
             contains_keyword = True
-    text = str(ev['message'])
+            msg = msg.lstrip(prefix)  # 实际问答中移除前缀
+            text = str(ev['message']).lstrip(prefix)
+            text_ok = True
+    if not text_ok:
+        text = str(ev['message'])
     qq_numbers = regex.findall(text)
     # 检查所有被艾特的QQ号
     qq_numbers.append(qq)
@@ -221,7 +241,18 @@ async def ai_chat(bot, ev):
         username = qq_to_username[group_id][qq]
         msg = regex.sub(lambda m: '@' + qq_to_username[group_id].get(m.group(1), m.group(1)), text)
         msg = re.sub(r'\[CQ:[^]]+\]', '', msg)
-        msg = f"{username}：{msg}"
+        if len(images) > 0:
+            # 消息中存在图片，按照OpenAI api官网的格式存
+            msg = [{"type": "text", "text": f"{username}：{msg}"}]
+            for image in images:
+                msg.append(
+                        {
+                            "type": "image_url", 
+                            "image_url": {"url": image}
+                        }
+                    )
+        else:
+            msg = f"{username}：{msg}"
         chat.add_group_context("user", msg)
     if str(ev["self_id"]) in qq_numbers:
     #如果被艾特，则必定触发
